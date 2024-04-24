@@ -200,28 +200,7 @@ def _create_mytoken_request(account, mytoken_profile, application_hint):
         data['application_hint'] = application_hint
     return json.dumps(data)
 
-
-def get_token_response_by_issuer_url(issuer_url,
-                                     min_valid_period=0,
-                                     application_hint=None,
-                                     scope=None,
-                                     audience=None):
-    """Gets token response by issuerURL; return triple of (access_token, issuer, expires_at)"""
-    return _get_at_iss_exo_from_request(
-        False,
-        _create_token_request_issuer(issuer_url, min_valid_period,
-                                     application_hint, scope, audience))
-
-
-def get_token_response(account_name,
-                       min_valid_period=0,
-                       application_hint=None,
-                       scope=None,
-                       audience=None):
-    """Gets token response by account short name; return triple of (access_token, issuer,
-    expires_at)"""
-    request = _create_token_request_account(account_name, min_valid_period,
-                                            application_hint, scope, audience)
+def _try_get_at_iss_exo_from_request_local_and_remote(request):
     try:
         return _get_at_iss_exo_from_request(False, request)
     except OidcAgentError as err:
@@ -236,6 +215,28 @@ def get_token_response(account_name,
             except OidcAgentError as rErr:
                 raise err
         raise
+
+def get_token_response_by_issuer_url(issuer_url,
+                                     min_valid_period=0,
+                                     application_hint=None,
+                                     scope=None,
+                                     audience=None):
+    """Gets token response by issuerURL; return triple of (access_token, issuer, expires_at)"""
+    request = _create_token_request_issuer(issuer_url, min_valid_period,
+                                     application_hint, scope, audience)
+    return _try_get_at_iss_exo_from_request_local_and_remote(request)
+
+
+def get_token_response(account_name,
+                       min_valid_period=0,
+                       application_hint=None,
+                       scope=None,
+                       audience=None):
+    """Gets token response by account short name; return triple of (access_token, issuer,
+    expires_at)"""
+    request = _create_token_request_account(account_name, min_valid_period,
+                                            application_hint, scope, audience)
+    return _try_get_at_iss_exo_from_request_local_and_remote(request)
 
 
 def get_access_token(account_name,
